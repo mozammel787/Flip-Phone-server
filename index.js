@@ -16,23 +16,56 @@ app.get('/', async (req, res) => {
 })
 
 
+
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.vp0emdq.mongodb.net/?retryWrites=true&w=majority`;
 const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true, serverApi: ServerApiVersion.v1 });
+
+const verifyJWT = (req, res, next) => {
+    const authHeader = req.headers.authorization;
+    if (!authHeader) {
+        return res.status(401).send({ message: 'unauthorized access' })
+    }
+    const token = authHeader.split(' ')[1]
+
+    jwt.verify(token, process.env.ACCESS_TOKEN_kye, function (err, decode) {
+        if (err) {
+            return res.status(403).send({ message: 'forbidden access' })
+        }
+        req.decode = decode;
+        next()
+    })
+}
 
 async function run() {
     try {
         const userCollection = client.db('FlipPhone').collection('user');
         const categoriesCollection = client.db('FlipPhone').collection('categories');
 
+        app.get('/jwt', async (req, res) => {
+            const email = req.query.email
+            const query = { email: email };
+            const user = await userCollection.findOne(query)
+            if (user) {
+                const token = jwt.sign({ email }, process.env.ACCESS_TOKEN, { expiresIn: '7d' })
+                return res.send({ accessToken: token })
+            }
+            res.status(403).send({ accessToken: '' })
+        })
+
+        const verifyAdmin = async (req, res, next) => {
+            const decodedEmail = req.decode.email;
+            const query = { email: decodedEmail };
+            const user = await userCollection.findOne(query);
+            if (user?.role !== 'admin') {
+                return res.status(403).send({ message: 'forbidden Access' })
+            }
+            next()
+
+        }
+
         app.get('/categories', async (req, res) => {
             const query = {}
             const users = await categoriesCollection.find(query).toArray()
-            res.send(users)
-        })
-
-        app.get('/users', async (req, res) => {
-            const query = {}
-            const users = await userCollection.find(query).toArray()
             res.send(users)
         })
         app.post('/users', async (req, res) => {
@@ -54,7 +87,42 @@ async function run() {
             const user = await userCollection.findOne(query)
             res.send({ isSeller: user?.role === 'seller' })
         })
-
+        app.get('/sellers', async (req, res) => {
+            const role = "seller";
+            const query = { role: role }
+            const user = await userCollection.find(query).toArray()
+            res.send(user)
+        })
+        app.put('/sellers/:id', async (req, res) => {
+            const id = req.params.id;
+            const filter = { _id: ObjectId(id) };
+            const options = { upsert: true }
+            const updateDoc = {
+                $set: {
+                    verified: true
+                }
+            }
+            const result = await userCollection.updateOne(filter, updateDoc, options)
+            res.send(result)
+        })
+        app.delete('/sellers/:id', async (req, res) => {
+            const id = req.params.id
+            const query = { _id: ObjectId(id) }
+            const result = await userCollection.deleteOne(query)
+            res.send(result)
+        })
+        app.get('/buyers', async (req, res) => {
+            const role = "";
+            const query = { role: role }
+            const user = await userCollection.find(query).toArray()
+            res.send(user)
+        })
+        app.delete('/buyers/:id', async (req, res) => {
+            const id = req.params.id
+            const query = { _id: ObjectId(id) }
+            const result = await userCollection.deleteOne(query)
+            res.send(result)
+        })
     }
     finally {
 
