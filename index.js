@@ -46,14 +46,15 @@ async function run() {
             const query = { email: email };
             const user = await userCollection.findOne(query)
             if (user) {
-                const token = jwt.sign({ email }, process.env.ACCESS_TOKEN, { expiresIn: '7d' })
-                return res.send({ accessToken: token })
+                const token = jwt.sign({ email }, process.env.ACCESS_TOKEN_kye, { expiresIn: '7d' })
+                return res.send({ geniusToken: token })
             }
-            res.status(403).send({ accessToken: '' })
+            res.status(403).send({ geniusToken: '' })
         })
 
         const verifyAdmin = async (req, res, next) => {
             const decodedEmail = req.decode.email;
+            console.log(res.decode);
             const query = { email: decodedEmail };
             const user = await userCollection.findOne(query);
             if (user?.role !== 'admin') {
@@ -87,13 +88,13 @@ async function run() {
             const user = await userCollection.findOne(query)
             res.send({ isSeller: user?.role === 'seller' })
         })
-        app.get('/sellers', async (req, res) => {
+        app.get('/sellers',verifyJWT,verifyAdmin, async (req, res) => {
             const role = "seller";
             const query = { role: role }
-            const user = await userCollection.find(query).toArray()
+            const user = await userCollection.find(query).toArray()   
             res.send(user)
         })
-        app.put('/sellers/:id', async (req, res) => {
+        app.put('/sellers/:id',verifyJWT,verifyAdmin, async (req, res) => {
             const id = req.params.id;
             const filter = { _id: ObjectId(id) };
             const options = { upsert: true }
@@ -105,19 +106,19 @@ async function run() {
             const result = await userCollection.updateOne(filter, updateDoc, options)
             res.send(result)
         })
-        app.delete('/sellers/:id', async (req, res) => {
+        app.delete('/sellers/:id',verifyJWT,verifyAdmin, async (req, res) => {
             const id = req.params.id
             const query = { _id: ObjectId(id) }
             const result = await userCollection.deleteOne(query)
             res.send(result)
         })
-        app.get('/buyers', async (req, res) => {
+        app.get('/buyers',verifyJWT,verifyAdmin, async (req, res) => {
             const role = "";
             const query = { role: role }
             const user = await userCollection.find(query).toArray()
             res.send(user)
         })
-        app.delete('/buyers/:id', async (req, res) => {
+        app.delete('/buyers/:id',verifyJWT,verifyAdmin, async (req, res) => {
             const id = req.params.id
             const query = { _id: ObjectId(id) }
             const result = await userCollection.deleteOne(query)
