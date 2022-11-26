@@ -64,17 +64,17 @@ async function run() {
             next()
 
         }
-        const verifySeller = async (req, res, next) => {
-            const decodedEmail = req.decode.email;
-            console.log(res.decode);
-            const query = { email: decodedEmail };
-            const user = await userCollection.findOne(query);
-            if (user?.role !== 'seller') {
-                return res.status(403).send({ message: 'forbidden Access' })
-            }
-            next()
+        // const verifySeller = async (req, res, next) => {
+        //     const decodedEmail = req.decode.email;
+        //     console.log(res.decode);
+        //     const query = { email: decodedEmail };
+        //     const user = await userCollection.findOne(query);
+        //     if (user?.role !== 'seller') {
+        //         return res.status(403).send({ message: 'forbidden Access' })
+        //     }
+        //     next()
 
-        }
+        // }
 
         app.get('/categories', async (req, res) => {
             const query = {}
@@ -99,6 +99,12 @@ async function run() {
             const query = { email: email }
             const user = await userCollection.findOne(query)
             res.send({ isSeller: user?.role === 'seller' })
+        })
+        app.get('/verify/seller/:email', async (req, res) => {
+            const email = req.params.email;
+            const query = { email: email }
+            const user = await userCollection.findOne(query)
+            res.send({ isVerify: user.verified=== true })
         })
         app.get('/sellers', verifyJWT, verifyAdmin, async (req, res) => {
             const role = "seller";
@@ -137,13 +143,13 @@ async function run() {
             res.send(result)
         })
 
-        app.post('/addproduct', verifyJWT, verifySeller, async (req, res) => {
+        app.post('/addproduct', verifyJWT,  async (req, res) => {
             const user = req.body
             const result = await productsCollection.insertOne(user);
             res.send(result)
 
         })
-        app.get('/product',verifyJWT,verifySeller,  async (req, res) => {
+        app.get('/product',verifyJWT,  async (req, res) => {
             const email = req.query.email;
             // console.log(req.decode);
             const decodedEmail = req.decode.email;
@@ -154,13 +160,13 @@ async function run() {
             const product = await productsCollection.find(query).toArray()
             res.send(product)
         })
-        app.delete('/product/:id', verifyJWT, verifySeller, async (req, res) => {
+        app.delete('/product/:id', verifyJWT,  async (req, res) => {
             const id = req.params.id
             const query = { _id: ObjectId(id) }
             const result = await productsCollection.deleteOne(query)
             res.send(result)
         })
-        app.put('/product/:id', verifyJWT, verifySeller, async (req, res) => {
+        app.put('/product/:id', verifyJWT, async (req, res) => {
             const id = req.params.id;
             const filter = { _id: ObjectId(id) }
             const options = { upsert: true }
