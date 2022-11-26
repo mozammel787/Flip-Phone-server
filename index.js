@@ -98,13 +98,13 @@ async function run() {
             const email = req.params.email;
             const query = { email: email }
             const user = await userCollection.findOne(query)
-            res.send({ isSeller: user?.role === 'seller' })
+            res.send({ isSellerOrAdmin:( user?.role === 'seller'||user?.role === 'admin' ) })
         })
         app.get('/verify/seller/:email', async (req, res) => {
             const email = req.params.email;
             const query = { email: email }
             const user = await userCollection.findOne(query)
-            res.send({ isVerify: user.verified=== true })
+            res.send({ isVerify: user.verified === true })
         })
         app.get('/sellers', verifyJWT, verifyAdmin, async (req, res) => {
             const role = "seller";
@@ -143,13 +143,13 @@ async function run() {
             res.send(result)
         })
 
-        app.post('/addproduct', verifyJWT,  async (req, res) => {
+        app.post('/addproduct', verifyJWT, async (req, res) => {
             const user = req.body
             const result = await productsCollection.insertOne(user);
             res.send(result)
 
         })
-        app.get('/product',verifyJWT,  async (req, res) => {
+        app.get('/product', verifyJWT, async (req, res) => {
             const email = req.query.email;
             // console.log(req.decode);
             const decodedEmail = req.decode.email;
@@ -160,7 +160,7 @@ async function run() {
             const product = await productsCollection.find(query).toArray()
             res.send(product)
         })
-        app.delete('/product/:id', verifyJWT,  async (req, res) => {
+        app.delete('/product/:id', verifyJWT, async (req, res) => {
             const id = req.params.id
             const query = { _id: ObjectId(id) }
             const result = await productsCollection.deleteOne(query)
@@ -177,6 +177,12 @@ async function run() {
             }
             const result = await productsCollection.updateOne(filter, updatedDoc, options)
             res.send(result)
+        })
+        app.get('/advertisement', async (req, res) => {
+            const advertisement = true;
+            const query = { advertisement: advertisement }
+            const user = await productsCollection.find(query).sort({ "postTime": -1 }).toArray()
+            res.send(user)
         })
     }
     finally {
