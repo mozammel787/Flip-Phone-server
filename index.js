@@ -87,12 +87,39 @@ async function run() {
             const result = await productsCollection.find(query).toArray()
             res.send(result);
         })
+
+
+        app.get('/users', verifyJWT, verifyAdmin, async (req, res) => {
+            const query = {}
+            // console.log(user);
+            const result = await userCollection.find(query).toArray()
+            res.send(result)
+
+        })
         app.post('/users', async (req, res) => {
             const user = req.body
             // console.log(user);
             const result = await userCollection.insertOne(user);
             res.send(result)
 
+        })
+        app.put('/users/makeadmin/:id', verifyJWT, verifyAdmin, async (req, res) => {
+            const id = req.params.id;
+            const filter = { _id: ObjectId(id) };
+            const options = { upsert: true }
+            const updateDoc = {
+                $set: {
+                    role: "admin"
+                }
+            }
+            const result = await userCollection.updateOne(filter, updateDoc, options)
+            res.send(result)
+        })
+        app.delete('/users/delete/:id', verifyJWT, verifyAdmin, async (req, res) => {
+            const id = req.params.id
+            const query = { _id: ObjectId(id) }
+            const result = await userCollection.deleteOne(query)
+            res.send(result)
         })
         app.get('/users/admin/:email', async (req, res) => {
             const email = req.params.email;
@@ -106,18 +133,21 @@ async function run() {
             const user = await userCollection.findOne(query)
             res.send({ isSellerOrAdmin: (user?.role === 'seller' || user?.role === 'admin') })
         })
+
         app.get('/verify/seller/:email', async (req, res) => {
             const email = req.params.email;
             const query = { email: email }
             const user = await userCollection.findOne(query)
             res.send({ isVerify: user.verified === true })
         })
+
         app.get('/sellers', verifyJWT, verifyAdmin, async (req, res) => {
             const role = "seller";
             const query = { role: role }
             const user = await userCollection.find(query).toArray()
             res.send(user)
         })
+
         app.put('/sellers/:id', verifyJWT, verifyAdmin, async (req, res) => {
             const id = req.params.id;
             const filter = { _id: ObjectId(id) };
