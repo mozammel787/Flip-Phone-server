@@ -41,6 +41,7 @@ async function run() {
         const userCollection = client.db('FlipPhone').collection('user');
         const categoriesCollection = client.db('FlipPhone').collection('categories');
         const productsCollection = client.db('FlipPhone').collection('products');
+        const bookingCollection = client.db('FlipPhone').collection('booking');
 
         app.get('/jwt', async (req, res) => {
             const email = req.query.email
@@ -83,7 +84,7 @@ async function run() {
         })
         app.get('/categories/:id', async (req, res) => {
             const id = req.params.id
-            const query = { categoriesId: id };
+            const query = { categoriesId: id, productStatus: 'Available' };
             const result = await productsCollection.find(query).toArray()
             res.send(result);
         })
@@ -179,13 +180,13 @@ async function run() {
             res.send(result)
         })
         app.get('/allproducts', verifyJWT, async (req, res) => {
-            const query = {}
+            const query = { productStatus: 'Available' }
             const categories = await productsCollection.find(query).toArray()
             res.send(categories)
         })
         app.post('/addproduct', verifyJWT, async (req, res) => {
-            const user = req.body
-            const result = await productsCollection.insertOne(user);
+            const product = req.body
+            const result = await productsCollection.insertOne(product);
             res.send(result)
 
         })
@@ -221,7 +222,7 @@ async function run() {
         })
         app.get('/advertisement', async (req, res) => {
             const advertisement = true;
-            const query = { advertisement: advertisement }
+            const query = { advertisement: advertisement, productStatus: 'Available' }
             const user = await productsCollection.find(query).sort({ "advertisementTime": -1 }).toArray()
             res.send(user)
         })
@@ -237,7 +238,7 @@ async function run() {
             const result = await productsCollection.updateOne(filter, updateDoc, options)
             res.send(result)
         })
-        app.get('/report', async (req, res) => {
+        app.get('/report',verifyJWT, verifyAdmin, async (req, res) => {
             const report = true;
             const query = { report: report }
             const user = await productsCollection.find(query).toArray()
@@ -248,6 +249,53 @@ async function run() {
             const query = { _id: ObjectId(id) }
             const result = await productsCollection.deleteOne(query)
             res.send(result)
+        })
+        // app.put('/booking/:id', verifyJWT, async (req, res) => {
+        //     const id = req.params.id;
+        //     const filter = { _id: ObjectId(id) }
+        //     const buyerInfo = req.body
+        //     const options = { upsert: true }
+        //     const updatedDoc = {
+        //         $set: {
+        //             productStatus: 'Booked',
+        //             buyerInfo,
+        //             sold: true
+        //         }
+        //     }
+        //     const result = await productsCollection.updateOne(filter, updatedDoc, options)
+        //     res.send(result)
+        // })
+        app.post('/booking',verifyJWT, async (req, res) => {
+            const buyerInfo = req.body
+            const result = await bookingCollection.insertOne(   buyerInfo)
+
+            const id = buyerInfo.bookingId
+            const filter = { _id: ObjectId(id) }
+            const updatedDoc = {
+                    $set: {
+                        productStatus: 'Booked',
+                        sold: true
+                    }
+            }
+            const updateResult = await productsCollection.updateOne(filter, updatedDoc)
+            res.send(result)
+
+        })
+        app.get('/booking/myproduct', verifyJWT, async (req, res) => {
+            const email = req.query.email;
+            const decodedEmail = req.decode.email;
+            if (!email === decodedEmail) {
+                return res.status(403).send({ message: 'forbidden access' })
+            }
+            const query = { email: email };
+            const product = await bookingCollection.find(query).toArray()
+            res.send(product)
+        })
+        app.get('/makepayment/:id', async (req, res) => {
+            const id = req.params.id
+            const query = { _id: ObjectId(id) }
+            const result = await bookingCollection.findOne(query)
+            res.send(result);
         })
     }
     finally {
