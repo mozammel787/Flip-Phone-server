@@ -240,7 +240,7 @@ async function run() {
             const result = await productsCollection.updateOne(filter, updateDoc, options)
             res.send(result)
         })
-        app.get('/report',verifyJWT, verifyAdmin, async (req, res) => {
+        app.get('/report', verifyJWT, verifyAdmin, async (req, res) => {
             const report = true;
             const query = { report: report }
             const user = await productsCollection.find(query).toArray()
@@ -267,17 +267,15 @@ async function run() {
         //     const result = await productsCollection.updateOne(filter, updatedDoc, options)
         //     res.send(result)
         // })
-        app.post('/booking',verifyJWT, async (req, res) => {
-            const buyerInfo = req.body
-            const result = await bookingCollection.insertOne(   buyerInfo)
-
-            const id = buyerInfo.bookingId
+        app.post('/booking', verifyJWT, async (req, res) => {
+            const bookingInfo = req.body
+            const result = await bookingCollection.insertOne(bookingInfo)
+            const id = bookingInfo.productId
             const filter = { _id: ObjectId(id) }
             const updatedDoc = {
-                    $set: {
-                        productStatus: 'Booked',
-                        sold: true
-                    }
+                $set: {
+                    booking: true
+                }
             }
             const updateResult = await productsCollection.updateOne(filter, updatedDoc)
             res.send(result)
@@ -289,7 +287,7 @@ async function run() {
             if (!email === decodedEmail) {
                 return res.status(403).send({ message: 'forbidden access' })
             }
-            const query = { email: email };
+            const query = { buyerEmail: email };
             const product = await bookingCollection.find(query).toArray()
             res.send(product)
         })
@@ -305,7 +303,7 @@ async function run() {
             const amount = price * 100;
             const paymentIntent = await stripe.paymentIntents.create({
                 amount: amount,
-                currency: "usd",  
+                currency: "usd",
                 "payment_method_types": [
                     "card"
                 ]
@@ -327,8 +325,34 @@ async function run() {
                 }
             }
             const updateResult = await bookingCollection.updateOne(filter, updatedDoc)
+
+            const productId = payment.productId
+            const filterProductId = { _id: ObjectId(productId) }
+            const updatedProductDoc = {
+                $set: {
+                    productStatus: 'sold',
+                    sold: true
+                }
+            }
+            const updateProductResult = await productsCollection.updateOne(filterProductId, updatedProductDoc)
             res.send(result)
 
+        })
+        app.get('/allselling',  async (req, res) => {
+            const query = {}
+            const result = await bookingCollection.find(query).toArray()
+            res.send(result)
+
+        })  
+        app.get('/mysell', verifyJWT, async (req, res) => {
+            const email = req.query.email;
+            const decodedEmail = req.decode.email;
+            if (!email === decodedEmail) {
+                return res.status(403).send({ message: 'forbidden access' })
+            }
+            const query = { sellerEmail: email };
+            const product = await bookingCollection.find(query).toArray()
+            res.send(product)
         })
     }
     finally {
