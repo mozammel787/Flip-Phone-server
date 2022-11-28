@@ -37,6 +37,7 @@ const verifyJWT = (req, res, next) => {
     })
 }
 
+
 async function run() {
     try {
         const userCollection = client.db('FlipPhone').collection('user');
@@ -55,6 +56,7 @@ async function run() {
             }
             res.status(403).send({ geniusToken: '' })
         })
+
 
         const verifyAdmin = async (req, res, next) => {
             const decodedEmail = req.decode.email;
@@ -79,6 +81,7 @@ async function run() {
 
         // }
 
+
         app.get('/categories', async (req, res) => {
             const query = {}
             const categories = await categoriesCollection.find(query).toArray()
@@ -90,6 +93,7 @@ async function run() {
             const result = await productsCollection.find(query).toArray()
             res.send(result);
         })
+
 
 
         app.get('/users', verifyJWT, verifyAdmin, async (req, res) => {
@@ -124,6 +128,8 @@ async function run() {
             const result = await userCollection.deleteOne(query)
             res.send(result)
         })
+
+
         app.get('/users/admin/:email', async (req, res) => {
             const email = req.params.email;
             const query = { email: email }
@@ -169,6 +175,9 @@ async function run() {
             const result = await userCollection.deleteOne(query)
             res.send(result)
         })
+
+
+
         app.get('/buyers', verifyJWT, verifyAdmin, async (req, res) => {
             const role = "";
             const query = { role: role }
@@ -192,6 +201,8 @@ async function run() {
             res.send(result)
 
         })
+
+
         app.get('/product', verifyJWT, async (req, res) => {
             const email = req.query.email;
             // console.log(req.decode);
@@ -222,12 +233,16 @@ async function run() {
             const result = await productsCollection.updateOne(filter, updatedDoc, options)
             res.send(result)
         })
+
+
         app.get('/advertisement', async (req, res) => {
             const advertisement = true;
             const query = { advertisement: advertisement, productStatus: 'Available' }
             const user = await productsCollection.find(query).sort({ "advertisementTime": -1 }).toArray()
             res.send(user)
         })
+
+
         app.put('/report/:id', async (req, res) => {
             const id = req.params.id;
             const filter = { _id: ObjectId(id) };
@@ -252,21 +267,9 @@ async function run() {
             const result = await productsCollection.deleteOne(query)
             res.send(result)
         })
-        // app.put('/booking/:id', verifyJWT, async (req, res) => {
-        //     const id = req.params.id;
-        //     const filter = { _id: ObjectId(id) }
-        //     const buyerInfo = req.body
-        //     const options = { upsert: true }
-        //     const updatedDoc = {
-        //         $set: {
-        //             productStatus: 'Booked',
-        //             buyerInfo,
-        //             sold: true
-        //         }
-        //     }
-        //     const result = await productsCollection.updateOne(filter, updatedDoc, options)
-        //     res.send(result)
-        // })
+       
+
+
         app.post('/booking', verifyJWT, async (req, res) => {
             const bookingInfo = req.body
             const result = await bookingCollection.insertOne(bookingInfo)
@@ -291,6 +294,8 @@ async function run() {
             const product = await bookingCollection.find(query).toArray()
             res.send(product)
         })
+
+
         app.get('/makepayment/:id', async (req, res) => {
             const id = req.params.id
             const query = { _id: ObjectId(id) }
@@ -312,6 +317,7 @@ async function run() {
                 clientSecret: paymentIntent.client_secret,
             })
         })
+
         app.post('/payments', async (req, res) => {
             const payment = req.body
             const result = await paymentCollection.insertOne(payment)
@@ -338,7 +344,9 @@ async function run() {
             res.send(result)
 
         })
-        app.get('/allselling',  async (req, res) => {
+
+
+        app.get('/allselling',verifyJWT,verifyAdmin,  async (req, res) => {
             const query = {}
             const result = await bookingCollection.find(query).toArray()
             res.send(result)
