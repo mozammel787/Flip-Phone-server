@@ -5,7 +5,8 @@ const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const port = process.env.PORT || 5000;
 require('dotenv').config()
 const app = express()
-// const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
+
+const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
 
 
 app.use(cors())
@@ -42,6 +43,7 @@ async function run() {
         const categoriesCollection = client.db('FlipPhone').collection('categories');
         const productsCollection = client.db('FlipPhone').collection('products');
         const bookingCollection = client.db('FlipPhone').collection('booking');
+        const paymentCollection = client.db('FlipPhone').collection('payment');
 
         app.get('/jwt', async (req, res) => {
             const email = req.query.email
@@ -296,6 +298,37 @@ async function run() {
             const query = { _id: ObjectId(id) }
             const result = await bookingCollection.findOne(query)
             res.send(result);
+        })
+        app.post('/create-payment-intent', async (req, res) => {
+            const product = req.body;
+            const price = product.price;
+            const amount = price * 100;
+            const paymentIntent = await stripe.paymentIntents.create({
+                amount: amount,
+                currency: "usd",  
+                "payment_method_types": [
+                    "card"
+                ]
+            });
+            res.send({
+                clientSecret: paymentIntent.client_secret,
+            })
+        })
+        app.post('/payments', async (req, res) => {
+            const payment = req.body
+            const result = await paymentCollection.insertOne(payment)
+
+            const id = payment.bookingId
+            const filter = { _id: ObjectId(id) }
+            const updatedDoc = {
+                $set: {
+                    paid: true,
+                    transactionId: payment.transactionId
+                }
+            }
+            const updateResult = await bookingCollection.updateOne(filter, updatedDoc)
+            res.send(result)
+
         })
     }
     finally {
