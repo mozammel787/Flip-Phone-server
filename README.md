@@ -4,7 +4,7 @@ This project was Tailwind DaisyUI  with [Create React App](https://github.com/fa
 
 ## Description
 
-Flip Phone is a old phone ReSelling webSite
+Flip Phone is a MERN stick base reselling E-commerce web application. It has three types of login systems based on the user. Also, it has different pages and routes based on admin, seller, buyer, It has a payment system through stripe js along with buying and selling. It uses google firebase authentication and JWT token for security.Implemented features such as a dynamic navigation menu and a contact form using React. It implements a MongoDB database to store data and uses Tailwind CSS-based daisyUI components for the design.
 
 - It's totally responsive web website.
 - It's basically a 15 -page complex website.
@@ -25,7 +25,7 @@ Flip Phone is a old phone ReSelling webSite
 - Server deploy on Vercel.
 - Node Express use for create Server Site.
 - Added react hotTost and react icon for make interacting.
-* Moment use for see post  time
+* Moment use for see post  time.
 
 # Live Link
 
@@ -37,7 +37,7 @@ You may also see any lint errors in the console.
 
 ## Repo Link
 
-[https://github.com/programming-hero-web-course-4/b612-used-products-resale-clients-side-mmozammel99](https://github.com/programming-hero-web-course-4/b612-used-products-resale-clients-side-mmozammel99)
+[https://github.com/mozammel787/Flip-Phone](https://github.com/mozammel787/Flip-Phone)
 
 ## Server Live Link
 
@@ -45,7 +45,7 @@ You may also see any lint errors in the console.
 
 ## Server Repo Link
 
-[https://github.com/programming-hero-web-course-4/b612-used-products-resale-server-side-mmozammel99](https://github.com/programming-hero-web-course-4/b612-used-products-resale-server-side-mmozammel99)
+[https://github.com/mozammel787/Flip-Phone-server](https://github.com/mozammel787/Flip-Phone-server)
 
 ### Framework used
 

@@ -190,7 +190,7 @@ async function run() {
             const result = await userCollection.deleteOne(query)
             res.send(result)
         })
-        app.get('/allproducts', verifyJWT, async (req, res) => {
+        app.get('/allproducts', async (req, res) => {
             const query = { productStatus: 'Available' }
             const categories = await productsCollection.find(query).toArray()
             res.send(categories)
@@ -346,7 +346,7 @@ async function run() {
         })
 
 
-        app.get('/allselling',verifyJWT,verifyAdmin,  async (req, res) => {
+        app.get('/allselling',verifyJWT, verifyAdmin,  async (req, res) => {
             const query = {}
             const result = await bookingCollection.find(query).toArray()
             res.send(result)
